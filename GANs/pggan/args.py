@@ -36,8 +36,8 @@ def get_args(batch_size=16):
     parser.add_argument("--img-path", type=str,
                         default="~/img_align_celeba_png",
                         help="Image path.")
-    parser.add_argument("--dataset-name", type=str, default="CelebA",
-                        choices=["CelebA"],
+    parser.add_argument("--dataset-name", type=str, default="Custom",
+                        choices=["Custom", "CelebA"],
                         help="Dataset name used.")
     parser.add_argument("--save-image-interval", type=int, default=1,
                         help="Interval for saving images.")
