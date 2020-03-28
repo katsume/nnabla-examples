@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-def get_args(batch_size=16):
+def get_args():
     """
     Get command line arguments.
 
@@ -31,7 +31,7 @@ def get_args(batch_size=16):
                         help="Context.")
     parser.add_argument("--type-config", "-t", type=str, default='float',
                         help='Type of computation. e.g. "float", "half".')
-    parser.add_argument("--batch-size", "-b", type=int, default=batch_size,
+    parser.add_argument("--batch-size", "-b", type=int, default=16,
                         help="Batch size.")
     parser.add_argument("--img-path", type=str,
                         default="~/img_align_celeba_png",
@@ -84,6 +84,8 @@ def get_args(batch_size=16):
     parser.add_argument("--validation-metric", type=str, default="swd",
                         choices=["swd", "ms-ssim"],
                         help="Validation metric for PGGAN.")
+    parser.add_argument("--resume", action='store_true',
+                        help="Resume training.")
 
     args = parser.parse_args()
 

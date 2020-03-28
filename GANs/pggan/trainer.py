@@ -39,10 +39,11 @@ class Trainer:
                  monitor_time,
                  monitor_image_tile,
                  resolution_list, channel_list, n_latent,
-                 n_critic=1,
-                 save_image_interval=1,
-                 hyper_sphere=True,
-                 l2_fake_weight=1.):
+                 n_critic,
+                 save_image_interval,
+                 hyper_sphere,
+                 l2_fake_weight,
+                 resume):
         # Config
         self.resolution_list = resolution_list
         self.channel_list = channel_list
@@ -51,6 +52,7 @@ class Trainer:
         self.save_image_interval = save_image_interval
         self.hyper_sphere = hyper_sphere
         self.l2_fake_weight = l2_fake_weight
+        self.resume = resume
         self.global_itr = 0
 
         # DataIterator
@@ -84,12 +86,23 @@ class Trainer:
 
         # TODO: change batchsize when the spatial size is greater than 128.
         for i in range(len(self.resolution_list) - 1):
-            # Train at this resolution
-            self._train(epoch_per_resolution)
-            self.gen.save_parameters(
-                self.monitor_path, "Gen_phase_{}".format(self.resolution_list[i]))
-            self.dis.save_parameters(
-                self.monitor_path, "Dis_phase_{}".format(self.resolution_list[i]))
+
+            gen_path= "Gen_phase_{}".format(self.resolution_list[i])
+            dis_path= "Dis_phase_{}".format(self.resolution_list[i])
+
+            gen_transition_path= "Gen_phase_{}to{}".format(self.resolution_list[i], self.resolution_list[i + 1])
+            dis_transition_path= "Dis_phase_{}to{}".format(self.resolution_list[i], self.resolution_list[i + 1])
+
+            if self.resume \
+                and self.gen.has_parameters(self.monitor_path, gen_path) \
+                and self.dis.has_parameters(self.monitor_path, dis_path):
+                self.gen.load_parameters(self.monitor_path, gen_path)
+                self.dis.load_parameters(self.monitor_path, dis_path)
+            else:
+                # Train at this resolution
+                self._train(epoch_per_resolution)
+                self.gen.save_parameters(self.monitor_path, gen_path)
+                self.dis.save_parameters(self.monitor_path, dis_path)
 
             # Add new resolution and channel
             self.gen.grow(
@@ -97,17 +110,20 @@ class Trainer:
             self.dis.grow(
                 self.resolution_list[i + 1], self.channel_list[i + 1])
 
-            # Train in transition period
-            self._transition(epoch_per_resolution)
+            if self.resume \
+                and self.gen.has_parameters(self.monitor_path, gen_transition_path) \
+                and self.dis.has_parameters(self.monitor_path, dis_transition_path):
+                self.gen.load_parameters(self.monitor_path, gen_transition_path)
+                self.dis.load_parameters(self.monitor_path, dis_transition_path)
+            else:
+                # Train in transition period
+                self._transition(epoch_per_resolution)
+                # Save parameter
+                self.gen.save_parameters(self.monitor_path, gen_transition_path)
+                self.dis.save_parameters(self.monitor_path, dis_transition_path)
 
             # Monitor
             self.monitor_time.add(i)
-
-            # Save parameter
-            self.gen.save_parameters(self.monitor_path, "Gen_phase_{}to{}".format(
-                self.resolution_list[i], self.resolution_list[i + 1]))
-            self.dis.save_parameters(self.monitor_path, "Dis_phase_{}to{}".format(
-                self.resolution_list[i], self.resolution_list[i + 1]))
 
             # Clear unnecessary memory (i.e., memory related to_RGB at each resolution)
             import nnabla_ext.cuda

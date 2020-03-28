@@ -87,7 +87,8 @@ def main():
                       n_latent=args.latent, n_critic=args.critic,
                       save_image_interval=args.save_image_interval,
                       hyper_sphere=args.hyper_sphere,
-                      l2_fake_weight=args.l2_fake_weight)
+                      l2_fake_weight=args.l2_fake_weight,
+                      resume=args.resume)
 
     # TODO: use images per resolution?
     trainer.train(args.epoch_per_resolution)

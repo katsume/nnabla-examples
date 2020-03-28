@@ -152,11 +152,19 @@ class Generator:
                                    nxt_channel, test), nxt_resolution)
         return (1 - alpha) * lhs + alpha * rhs
 
-    def save_parameters(self, monitor_path, file_name):
-        path_params = "{}/{}.h5".format(monitor_path, file_name)
-        with nn.parameter_scope("generator"):
-            nn.save_parameters(path_params)
+    def get_parameter_path(self, monitor_path, file_name):
+        return "{}/{}.h5".format(monitor_path, file_name)
 
+    def save_parameters(self, monitor_path, file_name):
+        with nn.parameter_scope("generator"):
+            nn.save_parameters(self.get_parameter_path(monitor_path, file_name))
+
+    def has_parameters(self, monitor_path, file_name):
+        return os.path.exists(self.get_parameter_path(monitor_path, file_name))
+
+    def load_parameters(self, monitor_path, file_name):
+        with nn.parameter_scope("generator"):
+            _= nn.load_parameters(self.get_parameter_path(monitor_path, file_name))
 
 class Discriminator:
     def __init__(self, use_ln=False, alpha=0.1,
@@ -274,7 +282,16 @@ class Discriminator:
                                nxt_resolution, nxt_channel, pre_channel)
         return (1 - alpha) * lhs + alpha * rhs
 
+    def get_parameter_path(self, monitor_path, file_name):
+        return "{}/{}.h5".format(monitor_path, file_name)
+
     def save_parameters(self, monitor_path, file_name):
-        path_params = "{}/{}.h5".format(monitor_path, file_name)
         with nn.parameter_scope("discriminator"):
-            nn.save_parameters(path_params)
+            nn.save_parameters(self.get_parameter_path(monitor_path, file_name))
+
+    def has_parameters(self, monitor_path, file_name):
+        return os.path.exists(self.get_parameter_path(monitor_path, file_name))
+
+    def load_parameters(self, monitor_path, file_name):
+        with nn.parameter_scope("discriminator"):
+            _= nn.load_parameters(self.get_parameter_path(monitor_path, file_name))
