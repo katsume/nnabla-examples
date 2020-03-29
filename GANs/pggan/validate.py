@@ -55,7 +55,6 @@ def main():
 
     # DataIterator
     di = data_iterator(args.img_path, args.batch_size,
-                       imsize=(args.imsize, args.imsize),
                        num_samples=args.valid_samples,
                        dataset_name=args.dataset_name)
     # generator

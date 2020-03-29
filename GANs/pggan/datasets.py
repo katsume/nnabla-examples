@@ -24,19 +24,19 @@ import numpy as np
 
 
 def data_iterator(img_path, batch_size,
-                  imsize, num_samples, dataset_name, shuffle=True, rng=None):
+                  num_samples, dataset_name, shuffle=True, rng=None):
     if dataset_name == "CelebA":
         di = data_iterator_celeba(img_path, batch_size,
-                                  imsize=imsize, num_samples=num_samples, shuffle=shuffle, rng=rng)
+                                  num_samples=num_samples, shuffle=shuffle, rng=rng)
     elif dataset_name == "Custom":
         di = data_iterator_custom(img_path, batch_size,
-                                  imsize=imsize, num_samples=num_samples, shuffle=shuffle, rng=rng)
+                                  num_samples=num_samples, shuffle=shuffle, rng=rng)
     else:
         logger.info("Specified dataset is not supported.")
         sys.exit(0)
     return di
 
-def data_iterator_custom(img_path, batch_size, imsize, num_samples, shuffle, rng):
+def data_iterator_custom(img_path, batch_size, num_samples, shuffle, rng):
     imgs = glob.glob("{}/*.png".format(img_path))
     if num_samples == -1:
         num_samples = len(imgs)
@@ -51,7 +51,7 @@ def data_iterator_custom(img_path, batch_size, imsize, num_samples, shuffle, rng
         return img, None
     return data_iterator_simple(load_func, num_samples, batch_size, shuffle=shuffle, rng=rng, with_memory_cache=False, with_file_cache=False)
 
-def data_iterator_celeba(img_path, batch_size, imsize, num_samples, shuffle, rng):
+def data_iterator_celeba(img_path, batch_size, num_samples, shuffle, rng):
     imgs = glob.glob("{}/*.png".format(img_path))
     if num_samples == -1:
         num_samples = len(imgs)

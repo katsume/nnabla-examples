@@ -43,8 +43,6 @@ def get_args():
                         help="Interval for saving images.")
     parser.add_argument("--epoch-per-resolution", type=int, default=4,
                         help="Number of epochs per resolution.")
-    parser.add_argument("--imsize", type=int, default=128,
-                        help="Input image size.")
     parser.add_argument("--train-samples", type=int, default=-1,
                         help="Number of data to be used. When -1 is set all data is used.")
     parser.add_argument("--valid-samples", type=int, default=16384,
