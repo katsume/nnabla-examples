@@ -31,8 +31,6 @@ def get_args():
                         help="Context.")
     parser.add_argument("--type-config", "-t", type=str, default='float',
                         help='Type of computation. e.g. "float", "half".')
-    parser.add_argument("--batch-size", "-b", type=int, default=16,
-                        help="Batch size.")
     parser.add_argument("--img-path", type=str,
                         default="~/img_align_celeba_png",
                         help="Image path.")

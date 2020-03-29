@@ -38,7 +38,7 @@ class Trainer:
                  monitor_p_fake, monitor_p_real,
                  monitor_time,
                  monitor_image_tile,
-                 resolution_list, channel_list, n_latent,
+                 resolution_list, channel_list, batch_sizes, n_latent,
                  n_critic,
                  save_image_interval,
                  hyper_sphere,
@@ -47,6 +47,7 @@ class Trainer:
         # Config
         self.resolution_list = resolution_list
         self.channel_list = channel_list
+        self.batch_sizes = batch_sizes
         self.n_latent = n_latent
         self.n_critic = n_critic
         self.save_image_interval = save_image_interval
@@ -82,7 +83,7 @@ class Trainer:
 
         # Fix test random
         self.z_test = np.random.randn(
-            self.di.batch_size, self.n_latent, 1, 1)  # Fix random seed for test
+            self.batch_sizes[0], self.n_latent, 1, 1)  # Fix random seed for test
 
         # TODO: change batchsize when the spatial size is greater than 128.
         for i in range(len(self.resolution_list) - 1):
@@ -100,7 +101,7 @@ class Trainer:
                 self.dis.load_parameters(self.monitor_path, dis_path)
             else:
                 # Train at this resolution
-                self._train(epoch_per_resolution)
+                self._train(epoch_per_resolution, self.batch_sizes[i])
                 self.gen.save_parameters(self.monitor_path, gen_path)
                 self.dis.save_parameters(self.monitor_path, dis_path)
 
@@ -117,7 +118,7 @@ class Trainer:
                 self.dis.load_parameters(self.monitor_path, dis_transition_path)
             else:
                 # Train in transition period
-                self._transition(epoch_per_resolution)
+                self._transition(epoch_per_resolution, self.batch_sizes[i])
                 # Save parameter
                 self.gen.save_parameters(self.monitor_path, gen_transition_path)
                 self.dis.save_parameters(self.monitor_path, dis_transition_path)
@@ -130,19 +131,19 @@ class Trainer:
             nnabla_ext.cuda.clear_memory_cache()
 
         # Train at the final resolution
-        self._train(epoch_per_resolution, each_save=True)
+        self._train(epoch_per_resolution, self.batch_sizes[-1], each_save=True)
         self.monitor_time.add(i)
 
-    def _train(self, epoch_per_resolution, each_save=False):
-        batch_size = self.di.batch_size
+    def _train(self, epoch_per_resolution, batch_size, each_save=False):
         resolution = self.gen.resolution_list[-1]
         logger.info("phase : {}".format(resolution))
+        logger.info("batchsize : {}".format(batch_size))
 
         kernel_size = self.resolution_list[-1] // resolution
         kernel = (kernel_size, kernel_size)
 
         img_name = "original_phase_{}".format(resolution)
-        img, _ = self.di.next()
+        img, _ = self.di.next(batch_size)
         self.monitor_image_tile.add(img_name, img)
 
         for epoch in range(epoch_per_resolution):
@@ -150,7 +151,7 @@ class Trainer:
             itr = 0
             current_epoch = self.di.epoch
             while self.di.epoch == current_epoch:
-                img, _ = self.di.next()
+                img, _ = self.di.next(batch_size)
                 x = nn.Variable.from_numpy_array(img)
                 z = F.randn(shape=(batch_size, self.n_latent, 1, 1))
                 z = pixel_wise_feature_vector_normalization(
@@ -218,12 +219,12 @@ class Trainer:
                 self.dis.save_parameters(self.monitor_path, "Dis_phase_{}_epoch_{}".format(
                     self.resolution_list[-1], epoch+1))
 
-    def _transition(self, epoch_per_resolution):
-        batch_size = self.di.batch_size
+    def _transition(self, epoch_per_resolution, batch_size):
         resolution = self.gen.resolution_list[-1]
         phase = "{}to{}".format(
             self.gen.resolution_list[-2], self.gen.resolution_list[-1])
         logger.info("phase : {}".format(phase))
+        logger.info("batchsize : {}".format(batch_size))
 
         kernel_size = self.resolution_list[-1] // resolution
         kernel = (kernel_size, kernel_size)
@@ -237,7 +238,7 @@ class Trainer:
             itr = 0
             current_epoch = self.di.epoch
             while self.di.epoch == current_epoch:
-                img, _ = self.di.next()
+                img, _ = self.di.next(batch_size)
                 x = nn.Variable.from_numpy_array(img)
 
                 z = F.randn(shape=(batch_size, self.n_latent, 1, 1))

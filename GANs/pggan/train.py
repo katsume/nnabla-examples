@@ -35,6 +35,14 @@ def main():
     args = get_args()
     save_args(args)
 
+    # TODO: use argument
+    resolution_list = [4, 8, 16, 32, 64, 128]
+    channel_list = [512, 512, 256, 128, 64, 32]
+    batch_sizes= [16, 16, 8, 8, 4, 4]
+    # resolution_list = [4, 8, 16, 32, 64, 128, 256, 512]
+    # channel_list = [512, 512, 512, 512, 256, 128, 64, 32]
+    # batch_sizes= [16, 16, 16, 16, 8, 8, 4, 4]
+
     # Context
     ctx = get_extension_context(
         args.context, device_id=args.device_id, type_config=args.type_config)
@@ -42,7 +50,8 @@ def main():
     nn.set_auto_forward(True)
 
     # Data Iterator
-    di = data_iterator(args.img_path, args.batch_size,
+    di = data_iterator(args.img_path,
+                       batch_sizes[0],
                        num_samples=args.train_samples,
                        dataset_name=args.dataset_name)
     # Model
@@ -70,10 +79,6 @@ def main():
                                                   num_images=4,
                                                   normalize_method=lambda x: (x + 1.) / 2.)
 
-    # TODO: use argument
-    resolution_list = [4, 8, 16, 32, 64, 128]
-    channel_list = [512, 512, 256, 128, 64, 32]
-
     trainer = Trainer(di,
                       generator, discriminator,
                       solver_gen, solver_dis,
@@ -82,7 +87,7 @@ def main():
                       monitor_p_fake, monitor_p_real,
                       monitor_time,
                       monitor_image_tile,
-                      resolution_list, channel_list,
+                      resolution_list, channel_list, batch_sizes,
                       n_latent=args.latent, n_critic=args.critic,
                       save_image_interval=args.save_image_interval,
                       hyper_sphere=args.hyper_sphere,
